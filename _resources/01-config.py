@@ -1,9 +1,9 @@
 # Databricks notebook source
-#pip install mysql.connector
+pip install mysql.connector
 
 # COMMAND ----------
 
-#pip install faker
+pip install faker
 
 # COMMAND ----------
 
