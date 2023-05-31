@@ -1,5 +1,5 @@
 # Databricks on AWS - Demos
-![CLOUD](https://img.shields.io/badge/CLOUD-AWS-orange?logo=awscloud&style=for-the-badge)
+![CLOUD](https://img.shields.io/badge/CLOUD-AWS-orange?logo=amazonaws&style=for-the-badge)
 [![LAB](https://img.shields.io/badge/Lab-1_days-green?style=for-the-badge)](https://databricks.com/try-databricks)
 ## Description
 
