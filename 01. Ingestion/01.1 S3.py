@@ -7,7 +7,7 @@ dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 
 # MAGIC %md 
 # MAGIC ### Obtain the S3 bucket name from the AWS Console
-# MAGIC 
+# MAGIC
 # MAGIC Bucket name will look like : db-workshop-376145009885-ap-southeast-2-0d54ddd0
 
 # COMMAND ----------
@@ -21,13 +21,13 @@ dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC # Let's use DBUtils to explore a Bucket
-# MAGIC 
+# MAGIC
 # MAGIC Databricks Documentation 
-# MAGIC 
+# MAGIC
 # MAGIC Databricks Utils https://docs.databricks.com/dev-tools/databricks-utils.html
-# MAGIC 
+# MAGIC
 # MAGIC Working with S3 https://docs.databricks.com/external-data/amazon-s3.html
 
 # COMMAND ----------
@@ -54,6 +54,16 @@ df = spark.read.format("json").load(dbutils.fs.ls(cloud_storage_path+"/ingest")[
 df.display()
 df.count()
 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC # File Metadata Column
+# MAGIC You can get metadata information for input files with the _metadata column. The _metadata column is a hidden column, and is available for all input file formats. 
+# MAGIC Databricks Documentation 
+# MAGIC
+# MAGIC https://docs.databricks.com/ingestion/file-metadata-column.html#file-metadata-column
 
 # COMMAND ----------
 
@@ -94,53 +104,53 @@ df.createOrReplaceTempView('vw_json_files')
 # COMMAND ----------
 
 # MAGIC %md-sandbox
-# MAGIC 
+# MAGIC
 # MAGIC # What is Databricks Auto Loader?
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/autoloader/autoloader-edited-anim.gif" style="float:right; margin-left: 10px" />
-# MAGIC 
+# MAGIC
 # MAGIC [Databricks Auto Loader](https://docs.databricks.com/ingestion/auto-loader/index.html) lets you scan a cloud storage folder (S3, ADLS, GS) and only ingest the new data that arrived since the previous run.
-# MAGIC 
+# MAGIC
 # MAGIC This is called **incremental ingestion**.
-# MAGIC 
+# MAGIC
 # MAGIC Auto Loader can be used in a near real-time stream or in a batch fashion, e.g., running every night to ingest daily data.
-# MAGIC 
+# MAGIC
 # MAGIC Auto Loader provides a strong gaurantee when used with a Delta sink (the data will only be ingested once).
-# MAGIC 
+# MAGIC
 # MAGIC ## How Auto Loader simplifies data ingestion
-# MAGIC 
+# MAGIC
 # MAGIC Ingesting data at scale from cloud storage can be really hard at scale. Auto Loader makes it easy, offering these benefits:
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC * **Incremental** & **cost-efficient** ingestion (removes unnecessary listing or state handling)
 # MAGIC * **Simple** and **resilient** operation: no tuning or manual code required
 # MAGIC * Scalable to **billions of files**
 # MAGIC   * Using incremental listing (recommended, relies on filename order)
 # MAGIC   * Leveraging notification + message queue (when incremental listing can't be used)
 # MAGIC * **Schema inference** and **schema evolution** are handled out of the box for most formats (csv, json, avro, images...)
-# MAGIC 
+# MAGIC
 # MAGIC <img width="1px" src="https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Ffeatures%2Fauto_loader%2Fnotebook&dt=FEATURE_AUTOLOADER">
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC ## Using Auto Loader
-# MAGIC 
+# MAGIC
 # MAGIC In the cell below, a function is defined to demonstrate using Databricks Auto Loader with the PySpark API. This code includes both a Structured Streaming read and write.
-# MAGIC 
+# MAGIC
 # MAGIC The following notebook will provide a more robust overview of Structured Streaming. If you wish to learn more about Auto Loader options, refer to the <a href="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html" target="_blank">documentation</a>.
-# MAGIC 
+# MAGIC
 # MAGIC Note that when using Auto Loader with automatic <a href="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader-schema.html" target="_blank">schema inference and evolution</a>, the 4 arguments shown here should allow ingestion of most datasets. These arguments are explained below.
-# MAGIC 
+# MAGIC
 # MAGIC | argument | what it is | how it's used |
 # MAGIC | --- | --- | --- |
 # MAGIC | **`data_source`** | The directory of the source data | Auto Loader will detect new files as they arrive in this location and queue them for ingestion; passed to the **`.load()`** method |
 # MAGIC | **`source_format`** | The format of the source data |  While the format for all Auto Loader queries will be **`cloudFiles`**, the format of the source data should always be specified for the **`cloudFiles.format`** option |
 # MAGIC | **`table_name`** | The name of the target table | Spark Structured Streaming supports writing directly to Delta Lake tables by passing a table name as a string to the **`.table()`** method. Note that you can either append to an existing table or create a new table |
 # MAGIC | **`checkpoint_directory`** | The location for storing metadata about the stream | This argument is passed to the **`checkpointLocation`** and **`cloudFiles.schemaLocation`** options. Checkpoints keep track of streaming progress, while the schema location tracks updates to the fields in the source dataset |
-# MAGIC 
+# MAGIC
 # MAGIC **NOTE**: The code below has been streamlined to demonstrate Auto Loader functionality. We'll see in later lessons that additional transformations can be applied to source data before saving them to Delta Lake.
 
 # COMMAND ----------
@@ -213,14 +223,14 @@ file_counter = add_data(file_counter)
 # MAGIC %md 
 # MAGIC ## Ingesting a high volume of input files
 # MAGIC Scanning folders with many files to detect new data is an expensive operation, leading to ingestion challenges and higher cloud storage costs.
-# MAGIC 
+# MAGIC
 # MAGIC To solve this issue and support an efficient listing, Databricks autoloader offers two modes:
-# MAGIC 
+# MAGIC
 # MAGIC - Incremental listing with `cloudFiles.useIncrementalListing` (recommended), based on the alphabetical order of the file's path to only scan new data: (`ingestion_path/YYYY-MM-DD`)
 # MAGIC - Notification system, which sets up a managed cloud notification system sending new file name to a queue (when we can't rely on file name order). See `cloudFiles.useNotifications` for more details.
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/autoloader-mode.png" width="700"/>
-# MAGIC 
+# MAGIC
 # MAGIC Use the incremental listing option whenever possible. Databricks Auto Loader will try to auto-detect and use the incremental approach when possible.
 
 # COMMAND ----------
@@ -271,13 +281,13 @@ display(dbutils.fs.ls(cloud_storage_path+"/ingest_sns"))
 # MAGIC %md 
 # MAGIC ## Support for images
 # MAGIC Databricks Auto Loader provides native support for images and binary files.
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://github.com/QuentinAmbard/databricks-demo/raw/main/product_demos/autoloader-images.png" width="800" />
-# MAGIC 
+# MAGIC
 # MAGIC Just set the format accordingly and the engine will do the rest: `.option("cloudFiles.format", "binaryFile")`
-# MAGIC 
+# MAGIC
 # MAGIC Use-cases:
-# MAGIC 
+# MAGIC
 # MAGIC - ETL images into a Delta table using Auto Loader
 # MAGIC - Automatically ingest continuously arriving new images
 # MAGIC - Easily retrain ML models on new images
