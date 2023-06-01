@@ -5,6 +5,15 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Python: Creating a Kinesis Data Stream
+# MAGIC
+# MAGIC **Description:**
+# MAGIC
+# MAGIC The below Python code demonstrates how to create a Kinesis Data Stream using the Boto3 library. It imports the `boto3` module, sets the desired stream name and region, creates a client object, and calls the `create_stream()` method with the specified parameters.
+
+# COMMAND ----------
+
 # DBTITLE 1,Create the Kinesis Stream
 import boto3
 
