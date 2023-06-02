@@ -1,6 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC ### Using AWS SDK for Python (Boto3) to create resources
+# MAGIC The approach is used in a lab environment. In a normal production environment these cloud resources would be created by the infrastructure team.
 # MAGIC <a>https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html</a>
 
 # COMMAND ----------

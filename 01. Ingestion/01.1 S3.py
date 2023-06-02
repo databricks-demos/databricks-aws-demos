@@ -513,3 +513,29 @@ display(dbutils.fs.ls(cloud_storage_path+"/ingest_sns"))
 # MAGIC - Automatically ingest continuously arriving new images
 # MAGIC - Easily retrain ML models on new images
 # MAGIC - Perform distributed inference using a pandas UDF directly from Delta 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 4. Managing Access with Unity Catalog
+# MAGIC With the Unity Catalog, you can manage access permissions to your data tables across multiple workspaces.
+# MAGIC
+# MAGIC To set up Unity Catalog, you need to follow the Databricks guide.
+# MAGIC
+# MAGIC After setting up Unity Catalog, you can grant permissions on a table using SQL commands like below:
+# MAGIC
+# MAGIC ``GRANT SELECT ON TABLE my_table TO `{principal}``
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 5. Best Practices
+# MAGIC **Partitioning**: When dealing with large datasets, use partitioning to optimize reads and writes in Databricks.
+# MAGIC
+# MAGIC **Caching**: Use caching to improve performance of iterative and interactive data tasks.
+# MAGIC
+# MAGIC **Optimizing data formats**: Use efficient data format, Delta is the best format for your Lakehouse.
+# MAGIC
+# MAGIC **Delta Lake Maintenance**: Regularly run `OPTIMIZE` and `VACUUM` commands to maintain the health and performance of Delta tables. Optimizing coalesces small files and enables better compression. Vacuuming removes old versions of data no longer needed. Also, remember to compute statistics on your Delta tables using `ANALYZE TABLE COMPUTE STATISTICS`. These operations improve the performance of reads and enable Spark to make better query optimization decisions.
+# MAGIC
+# MAGIC **Monitoring and debugging**: Always monitor job progress, keep track of logs, and use built-in tools to diagnose and fix issues.
