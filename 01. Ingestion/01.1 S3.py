@@ -4,15 +4,15 @@
 # MAGIC
 # MAGIC We'll cover the following methods and functionalities:
 # MAGIC
-# MAGIC Exploring S3 using dbutils: Dbutils is a set of utility functions and a library provided by Databricks that can be used for various tasks including exploring the data and file systems.
+# MAGIC - **Exploring S3 using `dbutils`**: Dbutils is a set of utility functions and a library provided by Databricks that can be used for various tasks including exploring the data and file systems.
 # MAGIC
-# MAGIC Querying S3 using SQL: Databricks supports SQL for querying data, allowing us to read data directly from S3 using SQL syntax.
+# MAGIC - **Querying S3 using SQL**: Databricks supports SQL for querying data, allowing us to read data directly from S3 using SQL syntax.
 # MAGIC
-# MAGIC Ingestion with Databricks Autoloader: Autoloader is a Databricks feature that utilizes cloud events for incremental data ingestion from cloud storage.
+# MAGIC - **Ingestion with Databricks Autoloader**: Autoloader is a Databricks feature that utilizes cloud events for incremental data ingestion from cloud storage.
 # MAGIC
-# MAGIC Ingestion using Spark APIs: This will include options like using Spark's DataFrameReader API to load data directly from S3 into Databricks.
+# MAGIC - **Ingestion using Spark APIs**: This will include options like using Spark's DataFrameReader API to load data directly from S3 into Databricks.
 # MAGIC
-# MAGIC Ingestion using Databricks Delta Lake: Delta Lake allows us to make our data lake reliable with ACID transactions, and it also has inbuilt functionality to read data from S3.
+# MAGIC - **Ingestion using Databricks Delta Lake**: Delta Lake allows us to make our data lake reliable with ACID transactions, and it also has inbuilt functionality to read data from S3.
 
 # COMMAND ----------
 
@@ -60,10 +60,6 @@ dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 # dbutils.fs.ls({path})
 
 display(dbutils.fs.ls(cloud_storage_path+"/ingest"))
-
-# COMMAND ----------
-
-dbutils.fs.ls("databricks-datasets/flights")
 
 # COMMAND ----------
 
@@ -115,7 +111,9 @@ df.count()
 # COMMAND ----------
 
 # DBTITLE 1,(python) Read specific file into Dataframe
-df = spark.read.format("json").load(dbutils.fs.ls(cloud_storage_path+"/ingest")[0][0])
+#The below code uses an path directly to the file
+print(cloud_storage_path)
+df = spark.read.format("json").load(cloud_storage_path+"/ingest/part-00001.json.gz")
 
 df.display()
 df.count()
@@ -151,7 +149,7 @@ df.count()
 
 # DBTITLE 1,(python) Read specific file into Dataframe and add MetaData
 
-df = spark.read.format("json").load(dbutils.fs.ls(cloud_storage_path+"/ingest")[0][0]).select("*", "_metadata")
+df = spark.read.format("json").load(cloud_storage_path+"/ingest/part-00001.json.gz").select("*", "_metadata")
 df.display()
 
 # COMMAND ----------
@@ -174,7 +172,7 @@ df.display()
 # MAGIC
 # MAGIC ### When is it useful
 # MAGIC
-# MAGIC This is useful when you want to load a specific JSON file from a directory in cloud storage, include additional metadata in the resulting DataFrame, and create a temporary view to query the data using SQL. The temporary view provides a convenient way to interact with the DataFrame using SQL statements, which can be useful for complex data manipulations and analysis.
+# MAGIC This is useful when you want to load a specific JSON file from a directory in cloud storage, include additional metadata in the resulting DataFrame, and create a **temporary view to query the data using SQL**. The temporary view provides a convenient way to interact with the DataFrame using SQL statements, which can be useful for complex data manipulations and analysis.
 
 # COMMAND ----------
 
