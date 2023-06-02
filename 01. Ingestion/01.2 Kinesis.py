@@ -1,6 +1,8 @@
 # Databricks notebook source
 dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 
+# get the bucket name from Lab 1
+
 # COMMAND ----------
 
 cloud_storage_path = dbutils.widgets.get("cloud_storage_path")

@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC # Load data from MySQL to Delta Lake
-# MAGIC 
+# MAGIC
 # MAGIC This notebook shows you how to import data from JDBC MySQL databases into a Delta Lake table using Python.
-# MAGIC 
+# MAGIC
 # MAGIC https://docs.databricks.com/external-data/jdbc.html
 
 # COMMAND ----------
@@ -17,6 +17,21 @@ dbutils.widgets.text("rds_endpoint", "aws-lab-01-dms-01-rdsdbinstance-03hj4qaymw
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # Before we start we need the RDS DNS
+# MAGIC
+# MAGIC Log in to the AWS Management Console - Open your preferred web browser and navigate to https://aws.amazon.com/console/. Enter your account details to log in.
+# MAGIC
+# MAGIC 1. **Navigate to the RDS Service** - Once you're logged into the AWS Management Console, look for the "Services" dropdown in the top left corner of the screen. Click on it and search for "RDS" in the search bar, then select "RDS" to go to the Amazon RDS Dashboard.
+# MAGIC
+# MAGIC 2. **Open RDS Instances Dashboard** - In the RDS Dashboard, look for the "Databases" option in the left-hand navigation pane. Clicking on "Databases" will take you to a list of all your RDS instances.
+# MAGIC
+# MAGIC 3. **Select the Desired RDS Instance** - In the list of RDS instances, find the instance for which you want to get the DNS name. Click on the instance name to open its details page.
+# MAGIC
+# MAGIC 4. **Get the DNS Name** - In the details page of the selected RDS instance, look for the "Endpoint & port" section. The endpoint listed here is the DNS name of your RDS instance. You will use this DNS name to establish a connection from your Databricks environment to your RDS instance.
+
+# COMMAND ----------
+
 # MAGIC %run ../_resources/01-config
 
 # COMMAND ----------
@@ -26,41 +41,61 @@ dbutils.widgets.text("rds_endpoint", "aws-lab-01-dms-01-rdsdbinstance-03hj4qaymw
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
-# MAGIC ## Step 1: Connection information
-# MAGIC 
-# MAGIC First define some variables to programmatically create these connections.
+# MAGIC
+# MAGIC ## Lab 3: Consuming Amazon RDS
+# MAGIC **1. Connecting to Amazon RDS MySQL Database**
+# MAGIC
+# MAGIC To interact with Amazon RDS from Databricks, we need to establish a connection using JDBC. We create a JDBC URL, which includes the RDS endpoint, port, and database name. Along with this, we specify the connection properties which include the username, password, and driver details.
+# MAGIC
+# MAGIC ```
+# MAGIC jdbcHostname = "<RDS-endpoint>"
+# MAGIC jdbcDatabase = "<database-name>"
+# MAGIC jdbcPort = 3306
+# MAGIC jdbcUrl = f"jdbc:mysql://{jdbcHostname}:{jdbcPort}/{jdbcDatabase}"
+# MAGIC
+# MAGIC connectionProperties = {
+# MAGIC   "user" : "<username>",
+# MAGIC   "password" : "<password>",
+# MAGIC   "driver" : "com.mysql.jdbc.Driver",
+# MAGIC   "ssl" : "true"   # SSL for secure connection
+# MAGIC }
+# MAGIC ```
 
 # COMMAND ----------
 
-#table_name = 'pg_foreign_table'
-database_host = dbutils.widgets.get("rds_endpoint")
-database_name = 'demodb'
-database_port = "3306"
+jdbcHostname = dbutils.widgets.get("rds_endpoint")
+jdbcDatabase = 'demodb'
+jdbcPort = "3306"
 username = 'labuser'
 password = get_secret(dbutils.widgets.get("region_name"),dbutils.widgets.get("secret_name"))
 
-url = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
+jdbcUrl = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
 
+connectionProperties = {
+  "user" : username,
+  "password" : password,
+  "driver" : "com.mysql.jdbc.Driver",
+  "ssl" : "true"   # SSL for secure connection
+}
 print(url)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC The full URL printed out above should look something like:
-# MAGIC 
+# MAGIC
 # MAGIC ```
 # MAGIC jdbc:postgresql://localhost:3306/my_database
 # MAGIC jdbc:mysql://localhost:3306/my_database
 # MAGIC ```
-# MAGIC 
+# MAGIC
 # MAGIC ### Check connectivity
-# MAGIC 
+# MAGIC
 # MAGIC Depending on security settings for your Postgres database and Databricks workspace, you may not have the proper ports open to connect.
-# MAGIC 
+# MAGIC
 # MAGIC Replace `<database-host-url>` with the universal locator for your Postgres implementation. If you are using a non-default port, also update the 5432.
-# MAGIC 
+# MAGIC
 # MAGIC Run the cell below to confirm Databricks can reach your Postgres database.
 
 # COMMAND ----------
@@ -71,16 +106,14 @@ print(url)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
-# MAGIC ## Step 2: Write data
-# MAGIC 
-# MAGIC With the jdbc connection defined. We can use this to connect to the database and write some data for testing.
-# MAGIC 
-# MAGIC First, create a DataFrame in Python. This DataFrame contains names and ages.
+# MAGIC
+# MAGIC ### 2. Writing to an RDS Table
+# MAGIC We can write data from a Spark DataFrame back to an RDS table using the `write.jdbc` function. We need to specify the JDBC URL, the name of the destination table, the write mode (overwrite, append, etc.), and the connection properties.
 
 # COMMAND ----------
 
-people = spark.createDataFrame( [ ("Bilbo",     50), 
+#create a dataframe to write to the Database
+df = spark.createDataFrame( [ ("Bilbo",     50), 
                                   ("Gandalf", 1000), 
                                   ("Thorin",   195),  
                                   ("Balin",    178), 
@@ -96,84 +129,42 @@ people = spark.createDataFrame( [ ("Bilbo",     50),
 
 # COMMAND ----------
 
-# DBTITLE 1,Write Dataframe to RDS
-( people.write 
-    .format( "jdbc" ) 
-    .option( "url"    , url ) 
-    .option( "dbtable", "people" ) 
-    .option("user", "labuser") 
-    .option("password", password)
-    .mode("overwrite")
-    .save()
-)
-
-# COMMAND ----------
-
-people = spark.createDataFrame( [ (1, "Anne", 1) ], 
-                                ["id", "name", "age"] 
-                              )
-
-# COMMAND ----------
-
-( people.write 
-    .format( "jdbc" ) 
-    .option( "url"    , url ) 
-    .option( "dbtable", "people_new" ) 
-    .option("user", "labuser") 
-    .option("password", password)
-    .mode("append")
-    .save()
-)
+# DBTITLE 0,Write Dataframe to RDS
+df.write.jdbc(url=jdbcUrl, table="people", mode="overwrite", properties=connectionProperties)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
-# MAGIC ## Step 3: Reading the data
-# MAGIC 
-# MAGIC Now that you've specified the file metadata, you can create a DataFrame. Use an *option* to infer the data schema from the file. You can also explicitly set this to a particular schema if you have one already.
-# MAGIC 
-# MAGIC First, create a DataFrame in Python, referencing the variables defined above.
+# MAGIC
+# MAGIC ## 2. Reading from an RDS Table
+# MAGIC To read from an RDS table, we can use the `spark.read.jdbc` function. This function takes the JDBC URL, table name, and connection properties as parameters. We can either perform a full table read or a filtered read. For a filtered read, we specify the SQL query as the table parameter.
 
 # COMMAND ----------
 
-# DBTITLE 1,Read RDS Table
-remote_table = spark.read \
-    .format("jdbc") \
-    .option("url", url) \
-    .option("dbtable", "people") \
-    .option("user", "labuser") \
-    .option("password", password) \
-    .load()
+# DBTITLE 0,Read RDS Table
+# Full table read
+df = spark.read.jdbc(url=jdbcUrl, table="people", properties=connectionProperties)
 
-remote_table.display()
-remote_table.printSchema()
+df.display()
+df.printSchema()
 
 # COMMAND ----------
 
+# Filtered read
 n = 5 # Number of rows to take
 sql = "(SELECT * FROM people order by age LIMIT {0} ) AS tmp".format(int(n))
+df = spark.read.jdbc(url=jdbcUrl, table=sql, properties=connectionProperties)
 
-remote_table = spark.read \
-    .format("jdbc") \
-    .option("url", url) \
-    .option("dbtable", sql) \
-    .option("user", "labuser") \
-    .option("password", password) \
-    .load()
-
-remote_table.display()
-remote_table.printSchema()
+df.display()
+df.printSchema()
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## Step 3: Create a Delta table
-# MAGIC 
-# MAGIC The DataFrame defined and displayed above is a temporary connection to the remote database.
-# MAGIC 
-# MAGIC To ensure that this data can be accessed by relevant users throughout your workspace, save it as a Delta Lake table using the code below.
+# MAGIC
+# MAGIC Delta Lake is a powerful technology that brings reliability, performance, and lifecycle management to data lakes. We can convert our DataFrame to a Delta table to leverage these benefits. The Delta table can be queried using SQL and provides ACID transaction guarantees.
 
 # COMMAND ----------
 
@@ -183,9 +174,9 @@ remote_table.write.mode("overwrite").saveAsTable(target_table_name)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC This table will persist across cluster sessions, notebooks, and personas throughout your organization.
-# MAGIC 
+# MAGIC
 # MAGIC The code below demonstrates querying this data with Python and SQL.
 
 # COMMAND ----------
