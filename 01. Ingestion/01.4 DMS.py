@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC # Load data from RDS to Delta Lake using AWS Database Migration Service (DMS)
-# MAGIC 
+# MAGIC
 # MAGIC This notebook shows you how to import data from output by DMS. We will show full load and CDC
-# MAGIC 
+# MAGIC
 # MAGIC https://aws.amazon.com/dms/
 
 # COMMAND ----------
@@ -56,14 +56,41 @@ remote_table.printSchema()
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ### run the dms tasks in AWS Console
-# MAGIC ### Start Full load and Ongoing replication Tasks
+# MAGIC ## Lab 4: DMS for Full and CDC Loads
+# MAGIC ### 1. Introduction to AWS Database Migration Service (DMS)
+# MAGIC
+# MAGIC AWS DMS is a tool that can move data to and from the most widely used commercial and open-source databases. It supports homogeneous migrations as well as migrations between different database systems. In this lab, we have pre-configured DMS tasks to migrate data from an RDS MySQL database to S3.
+# MAGIC
+# MAGIC ### 2. Starting a Full Load Migration Task with AWS DMS
+# MAGIC
+# MAGIC In this section, you will start a pre-configured Full Load migration task on DMS. Follow the steps below:
+# MAGIC
+# MAGIC - Log into your AWS console and navigate to the DMS dashboard.
+# MAGIC - Go to the DMS Tasks page and find the Full Load task.
+# MAGIC - Click on the "Start/Resume" button to initiate the task.
+# MAGIC - Monitor the task progress from the task monitoring section.
 
 # COMMAND ----------
 
-# DBTITLE 1,Full Load
+# MAGIC %md
+# MAGIC ### 3. Reading Full Load CSV Data into Databricks
+# MAGIC
+# MAGIC The Full Load DMS task will create CSV files in a specified S3 bucket. We will now read this data into Databricks.
+
+# COMMAND ----------
+
+# DBTITLE 0,Full Load
 # MAGIC %sql
+# MAGIC --Check the file before loading
 # MAGIC SELECT * FROM csv.`${da.cloud_storage_path}/dms-output/demodb/customers/LOAD00000001.csv.gz`
+
+# COMMAND ----------
+
+# Read CSV files from S3 into a DataFrame
+df = spark.read.format('csv').options(header='true', inferSchema='true').load("s3://<bucket-name>/full-load/*.csv")
+
+# Write the DataFrame into a Delta table
+df.write.format("delta").saveAsTable("customers")
 
 # COMMAND ----------
 
