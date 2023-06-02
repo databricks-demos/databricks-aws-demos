@@ -1,67 +1,36 @@
 # Databricks notebook source
+dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
+
+# COMMAND ----------
+
+cloud_storage_path = dbutils.widgets.get("cloud_storage_path")
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC ### Using AWS SDK for Python (Boto3) to create resources
+# MAGIC # Lab 2: Consuming Kinesis Streams
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Using AWS SDK for Python (Boto3) to create resources
 # MAGIC The approach is used in a lab environment. In a normal production environment these cloud resources would be created by the infrastructure team.
 # MAGIC <a>https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html</a>
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Python: Creating a Kinesis Data Stream
-# MAGIC
-# MAGIC **Description:**
-# MAGIC
-# MAGIC The below Python code demonstrates how to create a Kinesis Data Stream using the Boto3 library. It imports the `boto3` module, sets the desired stream name and region, creates a client object, and calls the `create_stream()` method with the specified parameters.
+# MAGIC %run ../_resources/01-setup
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the Kinesis Stream
-import boto3
-
-kinesisStreamName = "StockTickerStream"
-kinesisRegion = "ap-southeast-2"
-client = boto3.client('kinesis',region_name=kinesisRegion)
-
-response = client.create_stream(
-    StreamName=kinesisStreamName,
-    StreamModeDetails={
-        'StreamMode': 'ON_DEMAND'
-    }
-)
-
-# COMMAND ----------
-
-spark.conf.set("spark.databricks.kinesis.listShards.enabled", False)
-
-# COMMAND ----------
-
-print(response)
-
-# COMMAND ----------
-
-import datetime
-import json
-import random
-
-def get_data():
-    return {
-        'event_time': datetime.datetime.now().isoformat(),
-        'ticker': random.choice(['AAPL', 'AMZN', 'MSFT', 'INTC', 'TBV']),
-        'price': round(random.random() * 100, 2)}
-
-
-def generate(stream_name, kinesis_client):
-     for val in range(300):
-        data = get_data()
-        #print(data)
-        kinesis_client.put_record(
-            StreamName=stream_name,
-            Data=json.dumps(data),
-            PartitionKey="partitionkey")
-
-# COMMAND ----------
-
+#Generate some data into the Stream. 
 generate(kinesisStreamName,client)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##  2. Reading from Kinesis Streams
+# MAGIC We use Spark Structured Streaming to read data from a Kinesis Stream. Let's define the necessary parameters and read the data.
 
 # COMMAND ----------
 
@@ -85,12 +54,96 @@ pythonSchema = StructType() \
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### 3. Data Serialization/Deserialization
+# MAGIC Kinesis data is binary, we need to convert the data into a usable format. Let's assume the data is in UTF-8 encoded strings.
+# MAGIC
+# MAGIC ```
+# MAGIC from pyspark.sql.functions import col
+# MAGIC kinesisDF = kinesisDF.selectExpr("CAST(data AS STRING)")
+# MAGIC ```
+
+# COMMAND ----------
+
 from pyspark.sql.functions import col, from_json
 
-newDF = kinesisData.selectExpr("cast (data as STRING) jsonData") \
+kinesisDF = kinesisData.selectExpr("cast (data as STRING) jsonData") \
             .select(from_json("jsonData", pythonSchema).alias("payload")) \
             .select("payload.*")
-display(newDF)
+#display(kinesisDF)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###  4. Sink Data to a Delta Table
+# MAGIC Delta Lake provides several advantages over regular Parquet. It provides ACID transactions, scalable metadata handling, and unifies streaming and batch data processing.
+# MAGIC
+# MAGIC Let's sink the data from the stream to a Delta table.
+
+# COMMAND ----------
+
+kinesisDF.writeStream \
+  .format("delta") \
+  .option("checkpointLocation", cloud_storage_path+"/delta/checkpoints") \
+  .table("stock_ticker")
+
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT count(*) FROM stock_ticker
+
+# COMMAND ----------
+
+#Add some more data into the Stream. 
+generate(kinesisStreamName,client)
+# Now check 
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT count(*) FROM stock_ticker
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ### 5. Error Handling and Recovery
+# MAGIC Structured Streaming can recover from failures and continue processing where it left off. We'll have to specify a checkpoint location in case of failure. In the above example, /delta/checkpoints is the checkpoint location.
+# MAGIC
+# MAGIC ### 6. Checkpoints and Job Restarts
+# MAGIC Checkpoints store the current state of a streaming query, which can be used to restart the query in case of a failure. You can monitor and analyze checkpoints using Databricks’ built-in structured streaming sink, or by inspecting the checkpoint files directly in the file system.
+# MAGIC
+# MAGIC To restart a failed job from a checkpoint, simply start the query with the same checkpoint location.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 7. Watermarking and Window Aggregations
+# MAGIC If your stream processing includes handling late data or performing window-based operations, you can specify a watermark delay threshold and use window functions for aggregations.
+# MAGIC
+# MAGIC ```
+# MAGIC kinesisDF.withWatermark("timestamp", "10 minutes") \
+# MAGIC   .groupBy(window(kinesisDF.timestamp, "10 minutes")) \
+# MAGIC   .count()
+# MAGIC
+# MAGIC ```
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 8. Performance Monitoring and Tuning
+# MAGIC You can use AWS CloudWatch and Databricks' built-in Spark UI to monitor the performance of the Kinesis ingestion job. Adjust the number of shards in Kinesis and parameters such as maxRecordsPerFetch and maxRatePerShard in Databricks based on your monitoring insights to achieve optimal performance.
+# MAGIC
+# MAGIC ### 9. Security and Access Control
+# MAGIC IAM roles are used to securely access Kinesis Streams from Databricks. Make sure to assign necessary permissions to your IAM role to read from Kinesis and write to S3 (for checkpointing and sinking data to Delta).
+# MAGIC
+# MAGIC ### 10. Best Practices
+# MAGIC Follow these tips for efficiently consuming Kinesis streams with Databricks:
+# MAGIC
+# MAGIC - Regularly monitor your jobs and tune your Kinesis shards and Databricks parameters for best performance.
+# MAGIC - Use a secure IAM role with minimal necessary permissions.
+# MAGIC - If you are dealing with late data or require window-based operations, use watermarking and window functions.
+# MAGIC - Make use of Delta Lake's features such as ACID transactions and unified batch and streaming processing.
 
 # COMMAND ----------
 
