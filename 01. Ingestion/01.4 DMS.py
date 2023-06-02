@@ -37,18 +37,17 @@ username = 'labuser'
 password = get_secret(dbutils.widgets.get("region_name"),dbutils.widgets.get("secret_name"))
 
 url = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
-
+connectionProperties = {
+  "user" : username,
+  "password" : password,
+  "driver" : "com.mysql.jdbc.Driver",
+  "ssl" : "true"   # SSL for secure connection
+}
 print(url)
 
 # COMMAND ----------
 
-remote_table = spark.read \
-    .format("jdbc") \
-    .option("url", url) \
-    .option("dbtable", "customers") \
-    .option("user", "labuser") \
-    .option("password", password) \
-    .load()
+remote_table = spark.read.jdbc(url=jdbcUrl, table="customers", properties=connectionProperties) 
 
 remote_table.display()
 remote_table.printSchema()
@@ -87,10 +86,38 @@ remote_table.printSchema()
 # COMMAND ----------
 
 # Read CSV files from S3 into a DataFrame
-df = spark.read.format('csv').options(header='true', inferSchema='true').load("s3://<bucket-name>/full-load/*.csv")
+df = spark.read.format('csv').options(header='true', inferSchema='true').load(cloud_storage_path+"/dms-output/demodb/customers/LOAD00000001.csv.gz")
 
 # Write the DataFrame into a Delta table
 df.write.format("delta").saveAsTable("customers")
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ### 4. Data Consistency Check between RDS and Delta Table
+# MAGIC
+# MAGIC Now, we will perform a data consistency check between the original data in RDS and the new Delta table.
+# MAGIC
+# MAGIC First, we'll read data from RDS via JDBC.
+
+# COMMAND ----------
+
+df_rds = spark.read.jdbc(url=jdbcUrl, table="customers", properties=connectionProperties) 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC Then, compare the count of rows in both DataFrames.
+
+# COMMAND ----------
+
+assert df.count() == df_rds.count(), "Data is not consistent between RDS and Delta table"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Now lets generate some CDC data 
 
 # COMMAND ----------
 
@@ -98,6 +125,23 @@ df.write.format("delta").saveAsTable("customers")
 
 # COMMAND ----------
 
-# DBTITLE 1,CDC Data
+# MAGIC %md
+# MAGIC Run the below command to check that the CDC data is Landing. We will use this in our Next Lab using Delta Live Tables
+
+# COMMAND ----------
+
+# DBTITLE 0,CDC Data
 # MAGIC %sql
 # MAGIC SELECT * FROM csv.`${da.cloud_storage_path}/dms-cdc-output/demodb/customers/`
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 6. Best Practices
+# MAGIC
+# MAGIC When using AWS DMS and Databricks, there are several best practices to consider:
+# MAGIC
+# MAGIC - **Monitor your DMS tasks**: Regularly check the task monitoring section in DMS to ensure your tasks are running as expected.
+# MAGIC - **Validate your data**: After performing a data migration, always validate the migrated data to ensure consistency.
+# MAGIC - **Secure your connections**: When connecting to databases (like in JDBC), always secure your credentials. Consider using Databricks secrets for storing and using sensitive information.
+# MAGIC - **Handle schema changes**: When doing CDC, consider how you will handle schema changes in your source database. This could affect the format of your data files and the structure of your Delta table.
