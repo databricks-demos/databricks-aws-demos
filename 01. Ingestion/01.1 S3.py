@@ -1,4 +1,21 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC # Lab 1 Overview:
+# MAGIC
+# MAGIC We'll cover the following methods and functionalities:
+# MAGIC
+# MAGIC Exploring S3 using dbutils: Dbutils is a set of utility functions and a library provided by Databricks that can be used for various tasks including exploring the data and file systems.
+# MAGIC
+# MAGIC Querying S3 using SQL: Databricks supports SQL for querying data, allowing us to read data directly from S3 using SQL syntax.
+# MAGIC
+# MAGIC Ingestion with Databricks Autoloader: Autoloader is a Databricks feature that utilizes cloud events for incremental data ingestion from cloud storage.
+# MAGIC
+# MAGIC Ingestion using Spark APIs: This will include options like using Spark's DataFrameReader API to load data directly from S3 into Databricks.
+# MAGIC
+# MAGIC Ingestion using Databricks Delta Lake: Delta Lake allows us to make our data lake reliable with ACID transactions, and it also has inbuilt functionality to read data from S3.
+
+# COMMAND ----------
+
 #To reset the data and restart the demo from scratch, switch the widget to True and run the "%run ./_resources/00-setup $reset_all_data=$reset_all_data" cell below.
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
@@ -7,6 +24,8 @@ dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 
 # MAGIC %md 
 # MAGIC ### Obtain the S3 bucket name from the AWS Console
+# MAGIC
+# MAGIC <img src="https://github.com/databricks-demos/databricks-aws-demos/raw/main/_content/lab01_01.gif" style="float:right; margin-left: 10px" />
 # MAGIC
 # MAGIC Bucket name will look like : db-workshop-376145009885-ap-southeast-2-0d54ddd0
 
@@ -22,17 +41,11 @@ dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Python: Listing Files in Cloud Storage
+# MAGIC ##1. S3 Exploration
+# MAGIC ### Using dbutils:
+# MAGIC Dbutils is a utility library provided by Databricks which allows interacting with the system, including the underlying filesystem.
 # MAGIC
-# MAGIC The below Python code uses `dbutils.fs.ls()` to list the contents of a specific directory located in cloud storage. The directory path is obtained by concatenating the variable `cloud_storage_path` with "/ingest". The function `dbutils.fs.ls()` is a Databricks utility used to interact with the underlying filesystem. In this case, it lists all files and directories under the specified path.
-# MAGIC
-# MAGIC ### Key Functions or Methods
-# MAGIC
-# MAGIC - `dbutils.fs.ls()`: Lists the files and directories under a specified path in the cloud storage.
-# MAGIC
-# MAGIC ### When is it useful
-# MAGIC
-# MAGIC This is useful when you need to quickly check the contents of a directory in cloud storage. It helps you verify if the expected files or directories exist in the specified location. It can be beneficial for troubleshooting or monitoring purposes.
+# MAGIC Here is an example of how to use dbutils.fs.ls to list files in S3:
 # MAGIC
 # MAGIC
 # MAGIC ####Databricks Documentation 
@@ -47,6 +60,15 @@ dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 # dbutils.fs.ls({path})
 
 display(dbutils.fs.ls(cloud_storage_path+"/ingest"))
+
+# COMMAND ----------
+
+dbutils.fs.ls("databricks-datasets/flights")
+
+# COMMAND ----------
+
+#You can also use dbutils.fs.head to display the beginning of a file:
+print(dbutils.fs.head(cloud_storage_path+"/csv/departuredelays.csv"))
 
 # COMMAND ----------
 

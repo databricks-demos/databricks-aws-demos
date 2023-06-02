@@ -10,7 +10,12 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 if reset_all_data:
    dbutils.fs.rm(cloud_storage_path+"/ingest/",True)
    dbutils.fs.rm(cloud_storage_path+"/ingest_sns/",True)
+   
   
+
+# COMMAND ----------
+
+dbutils.fs.cp(f"/databricks-datasets/flights/departuredelays.csv",cloud_storage_path + f"/csv/departuredelays.csv")
 
 # COMMAND ----------
 
