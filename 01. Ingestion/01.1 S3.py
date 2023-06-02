@@ -538,4 +538,10 @@ display(dbutils.fs.ls(cloud_storage_path+"/ingest_sns"))
 # MAGIC
 # MAGIC **Delta Lake Maintenance**: Regularly run `OPTIMIZE` and `VACUUM` commands to maintain the health and performance of Delta tables. Optimizing coalesces small files and enables better compression. Vacuuming removes old versions of data no longer needed. Also, remember to compute statistics on your Delta tables using `ANALYZE TABLE COMPUTE STATISTICS`. These operations improve the performance of reads and enable Spark to make better query optimization decisions.
 # MAGIC
+# MAGIC `# Replace 'my_table' with your actual Delta table name.`
+# MAGIC
+# MAGIC - `spark.sql("OPTIMIZE my_table")`
+# MAGIC - `spark.sql("VACUUM my_table")`
+# MAGIC - `spark.sql("ANALYZE TABLE my_table COMPUTE STATISTICS")`
+# MAGIC
 # MAGIC **Monitoring and debugging**: Always monitor job progress, keep track of logs, and use built-in tools to diagnose and fix issues.
