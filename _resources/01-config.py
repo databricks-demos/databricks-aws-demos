@@ -1,5 +1,5 @@
 # Databricks notebook source
-pip install mysql.connector
+#pip install mysql.connector
 
 # COMMAND ----------
 
@@ -32,3 +32,34 @@ def get_secret(region_name,secret_name):
     secret = get_secret_value_response['SecretString']
     password = json.loads(secret)["password"] 
     return password
+
+# COMMAND ----------
+
+def get_rds_endpoint(cluster_name,region_name):
+    # region_name = 'us-east-1'
+    # cluster_name = 'workshop-serverless-cluster'
+    client = boto3.client('rds',region_name=region_name)
+    response = client.describe_db_cluster_endpoints(
+        DBClusterIdentifier=cluster_name
+    )
+    return response['DBClusterEndpoints'][0]['Endpoint']
+
+#["DBClusterEndpoints"]["Endpoint"])
+
+# COMMAND ----------
+
+def get_region():
+    my_session = boto3.session.Session()
+    my_region = my_session.region_name
+    return my_region
+
+
+# COMMAND ----------
+
+import boto3
+account_id = boto3.client("sts").get_caller_identity()["Account"]
+print(account_id)
+
+# COMMAND ----------
+
+

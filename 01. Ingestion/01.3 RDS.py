@@ -9,11 +9,18 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../_resources/01-config
+
+# COMMAND ----------
+
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 dbutils.widgets.text("cloud_storage_path", "s3://db-workshop-376145009395-us-east-1-8b79c6d0", "S3 Bucket")
-dbutils.widgets.text("region_name", "ap-southeast-2", "AWS Region")
-dbutils.widgets.text("secret_name", "SecretsManagerRDSAdmin-6Qr5W3OXPTFG", "AWS Secret Name")
-dbutils.widgets.text("rds_endpoint", "aws-lab-01-dms-01-rdsdbinstance-03hj4qaymwpq.cbdjtos45q8c.us-east-1.rds.amazonaws.com", "RDS Endpoint")
+dbutils.widgets.text("region_name", 'us-east-1', "AWS Region")
+dbutils.widgets.text("secret_name", "workshop-secret", "AWS Secret Name")
+#dbutils.widgets.text("rds_endpoint", "aws-lab-01-dms-01-rdsdbinstance-03hj4qaymwpq.cbdjtos45q8c.us-east-1.rds.amazonaws.com", "RDS Endpoint")
+dbutils.widgets.text("rds_endpoint", get_rds_endpoint('workshop-serverless-cluster',dbutils.widgets.get('region_name')), "RDS Endpoint")
+
+
 
 # COMMAND ----------
 
@@ -29,10 +36,6 @@ dbutils.widgets.text("rds_endpoint", "aws-lab-01-dms-01-rdsdbinstance-03hj4qaymw
 # MAGIC 3. **Select the Desired RDS Instance** - In the list of RDS instances, find the instance for which you want to get the DNS name. Click on the instance name to open its details page.
 # MAGIC
 # MAGIC 4. **Get the DNS Name** - In the details page of the selected RDS instance, look for the "Endpoint & port" section. The endpoint listed here is the DNS name of your RDS instance. You will use this DNS name to establish a connection from your Databricks environment to your RDS instance.
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/01-config
 
 # COMMAND ----------
 
@@ -69,15 +72,15 @@ jdbcPort = "3306"
 username = 'labuser'
 password = get_secret(dbutils.widgets.get("region_name"),dbutils.widgets.get("secret_name"))
 
-jdbcUrl = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
+jdbcUrl = f"jdbc:mysql://{jdbcHostname}:{jdbcPort}/{jdbcDatabase}"
 
 connectionProperties = {
   "user" : username,
   "password" : password,
-  "driver" : "com.mysql.jdbc.Driver",
+  #"driver" : "com.mysql.jdbc.Driver",
   "ssl" : "true"   # SSL for secure connection
 }
-print(url)
+print(jdbcUrl)
 
 # COMMAND ----------
 
