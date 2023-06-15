@@ -1,3 +1,6 @@
+Copyright (2023) Databricks, Inc.
+This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
+
 ## Support
 Databricks does not offer official support for `dbdemos` or any demo assets.
 For any issue with `dbdemos` or the demos installed, please open an issue and the demo team will have a look on a best effort basis.
