@@ -66,12 +66,7 @@ We welcome contributions to this project. Please refer to the CONTRIBUTING.md fi
 <a name="license"></a>
 ## License
 
-&copy; 2023 Databricks, Inc. All rights reserved. The source in this notebook is provided subject to the Databricks License [https://databricks.com/db-license-source].  All included or referenced third party libraries are subject to the licenses set forth below.
-
-| library                                | description             | license    | source                                              |
-|----------------------------------------|-------------------------|------------|-----------------------------------------------------|
-| faker | Faker is a Python package that generates fake data for you. | MIT  |   https://pypi.org/project/Faker/ |
-| mysql.connector | MySQL driver written in Python | GNU GPLv2  |   https://pypi.org/project/mysql-connector-python/ |
+&copy; 2023 Databricks, Inc. All rights reserved. The source in this notebook is provided subject to the Databricks License [https://databricks.com/db-license-source].  
 
 <a name="contact"></a>
 ## Contact
