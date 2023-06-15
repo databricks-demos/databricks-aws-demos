@@ -2,11 +2,17 @@
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 dbutils.widgets.text("db_prefix", "workshop", "Database prefix")
 dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
+dbutils.widgets.text("region_name", "ap-southeast-2", "AWS Region")
+dbutils.widgets.text("stack", "cfn-workspace", "CFN Stack")
 dbutils.widgets.text("catalog", "db_workshop", "Catalog")
 
 # COMMAND ----------
 
-cloud_storage_path = dbutils.widgets.get("cloud_storage_path")
+# MAGIC %run ../_resources/01-config $region_name=$region_name $stack=$stack
+
+# COMMAND ----------
+
+cloud_storage_path = 's3://'+spark.conf.get("da.workshop_bucket") #dbutils.widgets.get("cloud_storage_path")
 print("cloud_storage_path :"+cloud_storage_path)
 spark.conf.set("da.cloud_storage_path",cloud_storage_path)
 

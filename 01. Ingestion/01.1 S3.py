@@ -17,8 +17,9 @@
 # COMMAND ----------
 
 #To reset the data and restart the demo from scratch, switch the widget to True and run the "%run ./_resources/00-setup $reset_all_data=$reset_all_data" cell below.
+dbutils.widgets.text("region_name", 'ap-southeast-2', "AWS Region")
+dbutils.widgets.text("stack", "cfn-workspace", "CFN Stack")
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 
 # COMMAND ----------
 
@@ -31,7 +32,7 @@ dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $cloud_storage_path=$cloud_storage_path
+# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data 
 
 # COMMAND ----------
 

@@ -7,6 +7,11 @@
 
 # COMMAND ----------
 
+dbutils.widgets.text("stack", "db_workshop", "CFN Stack")
+dbutils.widgets.text("region_name", 'ap-southeast-2', "AWS Region")
+
+# COMMAND ----------
+
 import boto3
 from botocore.exceptions import ClientError
 import json
@@ -35,13 +40,50 @@ def get_secret(region_name,secret_name):
 
 # COMMAND ----------
 
-def get_rds_endpoint(cluster_name,region_name):
-    # region_name = 'us-east-1'
-    # cluster_name = 'workshop-serverless-cluster'
-    client = boto3.client('rds',region_name=region_name)
-    response = client.describe_db_cluster_endpoints(
-        DBClusterIdentifier=cluster_name
-    )
-    return response['DBClusterEndpoints'][0]['Endpoint']
+# def get_rds_endpoint(cluster_name,region_name):
+#     # region_name = 'us-east-1'
+#     # cluster_name = 'workshop-serverless-cluster'
+#     client = boto3.client('rds',region_name=region_name)
+#     response = client.describe_db_cluster_endpoints(
+#         DBClusterIdentifier=cluster_name
+#     )
+#     return response['DBClusterEndpoints'][0]['Endpoint']
+
+
+
+# COMMAND ----------
+
+#import boto3
+client = boto3.client('cloudformation',region_name=dbutils.widgets.get("region_name"))
+response = client.describe_stacks(StackName=dbutils.widgets.get("stack"))
+stack = response['Stacks'][0] 
+
+outputs = stack['Outputs']
+
+desired_output_keys = ['DatabrickWorkshopBucket', 'RDSendpoint', 'RDSsecret']
+cfn_outputs = {}
+
+for output in outputs:
+    output_key = output['OutputKey']
+    if output_key in desired_output_keys:
+        cfn_outputs[output_key] = output['OutputValue']
+
+workshop_bucket = cfn_outputs['DatabrickWorkshopBucket']
+rds_endpoint = cfn_outputs['RDSendpoint']
+rds_user = 'labuser'
+rds_password = get_secret(dbutils.widgets.get("region_name"),cfn_outputs['RDSsecret'])
+spark.conf.set("da.workshop_bucket",workshop_bucket)
+spark.conf.set("da.rds_endpoint",rds_endpoint)
+spark.conf.set("da.rds_user",rds_user)
+spark.conf.set("da.rds_password",rds_password)
+# print(f"""
+# S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
+# RDS End Point:              {cfn_outputs['RDSendpoint']}
+# Secret Manager:             {cfn_outputs['RDSsecret']}
+# RDS User:                   labuser
+# RDS Password:               {rds_password}
+# """)
+
+# COMMAND ----------
 
 

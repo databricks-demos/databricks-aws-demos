@@ -9,37 +9,13 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/01-config
-
-# COMMAND ----------
-
+dbutils.widgets.text("region_name", 'ap-southeast-2', "AWS Region")
+dbutils.widgets.text("stack", "cfn-workspace", "CFN Stack")
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-dbutils.widgets.text("cloud_storage_path", "s3://db-workshop-376145009395-us-east-1-8b79c6d0", "S3 Bucket")
-dbutils.widgets.text("region_name", 'us-east-1', "AWS Region")
-dbutils.widgets.text("secret_name", "workshop-rds-secret", "AWS Secret Name")
-#dbutils.widgets.text("rds_endpoint", "aws-lab-01-dms-01-rdsdbinstance-03hj4qaymwpq.cbdjtos45q8c.us-east-1.rds.amazonaws.com", "RDS Endpoint")
-dbutils.widgets.text("rds_endpoint", get_rds_endpoint('workshop-serverless-cluster',dbutils.widgets.get('region_name')), "RDS Endpoint")
-
-
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC # Before we start we need the RDS DNS
-# MAGIC
-# MAGIC Log in to the AWS Management Console - Open your preferred web browser and navigate to https://aws.amazon.com/console/. Enter your account details to log in.
-# MAGIC
-# MAGIC 1. **Navigate to the RDS Service** - Once you're logged into the AWS Management Console, look for the "Services" dropdown in the top left corner of the screen. Click on it and search for "RDS" in the search bar, then select "RDS" to go to the Amazon RDS Dashboard.
-# MAGIC
-# MAGIC 2. **Open RDS Instances Dashboard** - In the RDS Dashboard, look for the "Databases" option in the left-hand navigation pane. Clicking on "Databases" will take you to a list of all your RDS instances.
-# MAGIC
-# MAGIC 3. **Select the Desired RDS Instance** - In the list of RDS instances, find the instance for which you want to get the DNS name. Click on the instance name to open its details page.
-# MAGIC
-# MAGIC 4. **Get the DNS Name** - In the details page of the selected RDS instance, look for the "Endpoint & port" section. The endpoint listed here is the DNS name of your RDS instance. You will use this DNS name to establish a connection from your Databricks environment to your RDS instance.
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $cloud_storage_path=$cloud_storage_path
+# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $stack=$stack
 
 # COMMAND ----------
 
@@ -66,18 +42,17 @@ dbutils.widgets.text("rds_endpoint", get_rds_endpoint('workshop-serverless-clust
 
 # COMMAND ----------
 
-jdbcHostname = dbutils.widgets.get("rds_endpoint")
+jdbcHostname = spark.conf.get("da.rds_endpoint")
 jdbcDatabase = 'demodb'
 jdbcPort = "3306"
-username = 'labuser'
-password = get_secret(dbutils.widgets.get("region_name"),dbutils.widgets.get("secret_name"))
+username = spark.conf.get("da.rds_user")
+password = spark.conf.get("da.rds_password")
 
 jdbcUrl = f"jdbc:mysql://{jdbcHostname}:{jdbcPort}/{jdbcDatabase}"
 
 connectionProperties = {
   "user" : username,
   "password" : password,
-  #"driver" : "com.mysql.jdbc.Driver",
   "ssl" : "true"   # SSL for secure connection
 }
 print(jdbcUrl)

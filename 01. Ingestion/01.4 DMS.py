@@ -14,44 +14,36 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/01-config
-
-# COMMAND ----------
-
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-dbutils.widgets.text("cloud_storage_path", "s3://db-workshop-376145009395-us-east-1-8b79c6d0", "S3 Bucket")
+dbutils.widgets.text("stack", "cfn-workspace", "CFN Stack")
+#dbutils.widgets.text("cloud_storage_path", "s3://db-workshop-376145009395-us-east-1-8b79c6d0", "S3 Bucket")
 dbutils.widgets.text("region_name", "ap-southeast-2", "AWS Region")
-dbutils.widgets.text("secret_name", "workshop-rds-secret", "AWS Secret Name")
-dbutils.widgets.text("rds_endpoint", get_rds_endpoint('workshop-serverless-cluster',dbutils.widgets.get('region_name')), "RDS Endpoint")
+#dbutils.widgets.text("secret_name", "workshop-rds-secret", "AWS Secret Name")
+#dbutils.widgets.text("rds_endpoint", get_rds_endpoint('workshop-serverless-cluster',dbutils.widgets.get('region_name')), "RDS Endpoint")
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $cloud_storage_path=$cloud_storage_path
+# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $stack=$stack $region_name=$region_name
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/02-dms-cdc-data
+# MAGIC %run ../_resources/02-dms-cdc-data $region_name=$region_name
 
 # COMMAND ----------
 
-database_host = dbutils.widgets.get("rds_endpoint")
+database_host = spark.conf.get("da.rds_endpoint")
 database_name = 'demodb'
 database_port = "3306"
-username = 'labuser'
-password = get_secret(dbutils.widgets.get("region_name"),dbutils.widgets.get("secret_name"))
+username = spark.conf.get("da.rds_user")
+password = spark.conf.get("da.rds_password")
 
-url = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
+jdbcUrl = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
 connectionProperties = {
   "user" : username,
   "password" : password,
-  "driver" : "com.mysql.jdbc.Driver",
   "ssl" : "true"   # SSL for secure connection
 }
-print(url)
+print(jdbcUrl)
 
 # COMMAND ----------
 
@@ -129,7 +121,7 @@ assert df.count() == df_rds.count(), "Data is not consistent between RDS and Del
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/02-dms-cdc-data-generator
+# MAGIC %run ../_resources/02-dms-cdc-data-generator $region_name=$region_name
 
 # COMMAND ----------
 
