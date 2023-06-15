@@ -73,7 +73,7 @@ from faker import Faker
 fake = Faker()
 fake.seed_locale('en_US', 0)
 sql_inserter = ''
-for i in range(500):
+for i in range(100):
     fake_firstname = fake.first_name()
     fake_lastname = fake.last_name()
     fake_name = fake.name()
