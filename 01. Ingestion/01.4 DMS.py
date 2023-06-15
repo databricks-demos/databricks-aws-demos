@@ -14,15 +14,23 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../_resources/01-config
+
+# COMMAND ----------
+
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 dbutils.widgets.text("cloud_storage_path", "s3://db-workshop-376145009395-us-east-1-8b79c6d0", "S3 Bucket")
 dbutils.widgets.text("region_name", "ap-southeast-2", "AWS Region")
 dbutils.widgets.text("secret_name", "SecretsManagerRDSAdmin-6Qr5W3OXPTFG", "AWS Secret Name")
-dbutils.widgets.text("rds_endpoint", "aws-lab-01-dms-01-rdsdbinstance-03hj4qaymwpq.cbdjtos45q8c.us-east-1.rds.amazonaws.com", "RDS Endpoint")
+dbutils.widgets.text("rds_endpoint", get_rds_endpoint('workshop-serverless-cluster',dbutils.widgets.get('region_name')), "RDS Endpoint")
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $cloud_storage_path=$cloud_storage_path
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 
