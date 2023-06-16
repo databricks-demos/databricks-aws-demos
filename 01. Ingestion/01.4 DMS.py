@@ -15,19 +15,15 @@
 # COMMAND ----------
 
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-dbutils.widgets.text("stack", "cfn-workspace", "CFN Stack")
-#dbutils.widgets.text("cloud_storage_path", "s3://db-workshop-376145009395-us-east-1-8b79c6d0", "S3 Bucket")
-dbutils.widgets.text("region_name", "ap-southeast-2", "AWS Region")
-#dbutils.widgets.text("secret_name", "workshop-rds-secret", "AWS Secret Name")
-#dbutils.widgets.text("rds_endpoint", get_rds_endpoint('workshop-serverless-cluster',dbutils.widgets.get('region_name')), "RDS Endpoint")
+
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $stack=$stack $region_name=$region_name
+# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/02-dms-cdc-data $region_name=$region_name
+# MAGIC %run ../_resources/02-dms-cdc-data
 
 # COMMAND ----------
 
@@ -121,7 +117,7 @@ assert df.count() == df_rds.count(), "Data is not consistent between RDS and Del
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/02-dms-cdc-data-generator $region_name=$region_name
+# MAGIC %run ../_resources/02-dms-cdc-data-generator
 
 # COMMAND ----------
 

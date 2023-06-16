@@ -9,13 +9,11 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("region_name", 'ap-southeast-2', "AWS Region")
-dbutils.widgets.text("stack", "cfn-workspace", "CFN Stack")
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data $stack=$stack
+# MAGIC %run ../_resources/00-setup $reset_all_data=$reset_all_data
 
 # COMMAND ----------
 
@@ -147,7 +145,7 @@ df.printSchema()
 # COMMAND ----------
 
 target_table_name = "`people`"
-remote_table.write.mode("overwrite").saveAsTable(target_table_name)
+df.write.mode("overwrite").saveAsTable(target_table_name)
 
 # COMMAND ----------
 
@@ -165,3 +163,7 @@ remote_table.write.mode("overwrite").saveAsTable(target_table_name)
 # COMMAND ----------
 
 display(spark.table(target_table_name))
+
+# COMMAND ----------
+
+

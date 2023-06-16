@@ -1,11 +1,7 @@
 # Databricks notebook source
-dbutils.widgets.text("region_name", "ap-southeast-2", "AWS Region")
-
-# COMMAND ----------
-
 import boto3
-region = dbutils.widgets.get("region_name")
-client = boto3.client('lambda',region_name=dbutils.widgets.get("region_name"))
+region = get_region()
+client = boto3.client('lambda',region_name=region)
 response = client.invoke(
     FunctionName='db-DataGen',
     InvocationType='RequestResponse',  # Set the invocation type as needed
