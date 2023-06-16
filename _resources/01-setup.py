@@ -8,18 +8,39 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../_resources/01-config 
+
+# COMMAND ----------
+
+cloud_storage_path = 's3://'+spark.conf.get("da.workshop_bucket")
+
+# COMMAND ----------
+
 import boto3
 
 kinesisStreamName = "StockTickerStream"
-kinesisRegion = "ap-southeast-2"
+kinesisRegion = get_region()
 client = boto3.client('kinesis',region_name=kinesisRegion)
+try:
+    response = client.describe_stream(StreamName=kinesisStreamName)
+    if response['StreamDescription']['StreamStatus'] == 'ACTIVE':
+        print(f"Stream '{kinesisStreamName}' already exists.")
+        #return
+except client.exceptions.ResourceNotFoundException:
+    # Stream does not exist, so create it
+    print(f"Stream '{kinesisStreamName}' does not exist. Creating...")
+    response = client.create_stream(
+        StreamName=kinesisStreamName,
+        ShardCount=1  # Specify the desired number of shards
+    )
+    print(f"Stream '{kinesisStreamName}' created successfully.")
 
-response = client.create_stream(
-    StreamName=kinesisStreamName,
-    StreamModeDetails={
-        'StreamMode': 'ON_DEMAND'
-    }
-)
+# response = client.create_stream(
+#     StreamName=kinesisStreamName,
+#     StreamModeDetails={
+#         'StreamMode': 'ON_DEMAND'
+#     }
+# )
 
 # COMMAND ----------
 

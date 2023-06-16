@@ -1,16 +1,10 @@
 # Databricks notebook source
-dbutils.widgets.text("cloud_storage_path", "s3://{bucket_name}", "S3 Bucket")
-
-# get the bucket name from Lab 1
-
-# COMMAND ----------
-
-cloud_storage_path = dbutils.widgets.get("cloud_storage_path")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC # Lab 2: Consuming Kinesis Streams
+
+# COMMAND ----------
+
+# MAGIC %run ../_resources/01-setup
 
 # COMMAND ----------
 
@@ -18,10 +12,6 @@ cloud_storage_path = dbutils.widgets.get("cloud_storage_path")
 # MAGIC #### Using AWS SDK for Python (Boto3) to create resources
 # MAGIC The approach is used in a lab environment. In a normal production environment these cloud resources would be created by the infrastructure team.
 # MAGIC <a>https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html</a>
-
-# COMMAND ----------
-
-# MAGIC %run ../_resources/01-setup
 
 # COMMAND ----------
 
@@ -153,3 +143,7 @@ generate(kinesisStreamName,client)
 response = client.delete_stream(
     StreamName=kinesisStreamName
 )
+
+# COMMAND ----------
+
+

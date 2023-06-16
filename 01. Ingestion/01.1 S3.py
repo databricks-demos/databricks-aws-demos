@@ -17,18 +17,7 @@
 # COMMAND ----------
 
 #To reset the data and restart the demo from scratch, switch the widget to True and run the "%run ./_resources/00-setup $reset_all_data=$reset_all_data" cell below.
-dbutils.widgets.text("region_name", 'ap-southeast-2', "AWS Region")
-dbutils.widgets.text("stack", "cfn-workspace", "CFN Stack")
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC ### Obtain the S3 bucket name from the AWS Console
-# MAGIC
-# MAGIC <img src="https://github.com/databricks-demos/databricks-aws-demos/raw/main/_content/lab01_01.gif" style="float:right; margin-left: 10px" />
-# MAGIC
-# MAGIC Bucket name will look like : db-workshop-376145009885-ap-southeast-2-0d54ddd0
 
 # COMMAND ----------
 
