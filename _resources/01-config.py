@@ -80,13 +80,13 @@ def get_cfn():
             spark.conf.set("da.rds_user",rds_user)
             spark.conf.set("da.rds_password",rds_password)
 
-    print(f"""
-    S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
-    RDS End Point:              {cfn_outputs['RDSendpoint']}
-    Secret Manager:             {cfn_outputs['RDSsecret']}
-    RDS User:                   labuser
-    RDS Password:               {rds_password}
-    """)
+    # print(f"""
+    # S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
+    # RDS End Point:              {cfn_outputs['RDSendpoint']}
+    # Secret Manager:             {cfn_outputs['RDSsecret']}
+    # RDS User:                   labuser
+    # RDS Password:               {rds_password}
+    # """)
 
 # COMMAND ----------
 
