@@ -60,32 +60,33 @@ def get_cfn():
     #stack = response['Stacks'][0] 
     for stack in response['Stacks']:
     #spark.conf.set("da.stack",dbutils.widgets.get("stack"))
-        outputs = stack['Outputs']
+        outputs = stack.get('Outputs', [])
+        if outputs:
 
-        desired_output_keys = ['DatabrickWorkshopBucket', 'RDSendpoint', 'RDSsecret']
-        cfn_outputs = {}
+            desired_output_keys = ['DatabrickWorkshopBucket', 'RDSendpoint', 'RDSsecret']
+            cfn_outputs = {}
 
-        for output in outputs:
-            output_key = output['OutputKey']
-            if output_key in desired_output_keys:
-                cfn_outputs[output_key] = output['OutputValue']
+            for output in outputs:
+                output_key = output['OutputKey']
+                if output_key in desired_output_keys:
+                    cfn_outputs[output_key] = output['OutputValue']
 
-        workshop_bucket = cfn_outputs['DatabrickWorkshopBucket']
-        rds_endpoint = cfn_outputs['RDSendpoint']
-        rds_user = 'labuser'
-        rds_password = get_secret(get_region(),cfn_outputs['RDSsecret'])
-        spark.conf.set("da.workshop_bucket",workshop_bucket)
-        spark.conf.set("da.rds_endpoint",rds_endpoint)
-        spark.conf.set("da.rds_user",rds_user)
-        spark.conf.set("da.rds_password",rds_password)
+            workshop_bucket = cfn_outputs['DatabrickWorkshopBucket']
+            rds_endpoint = cfn_outputs['RDSendpoint']
+            rds_user = 'labuser'
+            rds_password = get_secret(get_region(),cfn_outputs['RDSsecret'])
+            spark.conf.set("da.workshop_bucket",workshop_bucket)
+            spark.conf.set("da.rds_endpoint",rds_endpoint)
+            spark.conf.set("da.rds_user",rds_user)
+            spark.conf.set("da.rds_password",rds_password)
 
-    # print(f"""
-    # S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
-    # RDS End Point:              {cfn_outputs['RDSendpoint']}
-    # Secret Manager:             {cfn_outputs['RDSsecret']}
-    # RDS User:                   labuser
-    # RDS Password:               {rds_password}
-    # """)
+    print(f"""
+    S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
+    RDS End Point:              {cfn_outputs['RDSendpoint']}
+    Secret Manager:             {cfn_outputs['RDSsecret']}
+    RDS User:                   labuser
+    RDS Password:               {rds_password}
+    """)
 
 # COMMAND ----------
 
