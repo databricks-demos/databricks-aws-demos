@@ -1,4 +1,12 @@
 # Databricks notebook source
+pip install databricks-sdk
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
 import boto3
 from botocore.exceptions import ClientError
 import json
@@ -80,14 +88,56 @@ def get_cfn():
             spark.conf.set("da.rds_user",rds_user)
             spark.conf.set("da.rds_password",rds_password)
 
-    # print(f"""
-    # S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
-    # RDS End Point:              {cfn_outputs['RDSendpoint']}
-    # Secret Manager:             {cfn_outputs['RDSsecret']}
-    # RDS User:                   labuser
-    # RDS Password:               {rds_password}
-    # """)
+    print(f"""
+    S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
+    RDS End Point:              {cfn_outputs['RDSendpoint']}
+    Secret Manager:             {cfn_outputs['RDSsecret']}
+    RDS User:                   labuser
+    RDS Password:               {rds_password}
+    """)
 
 # COMMAND ----------
 
 get_cfn()
+
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service import workspace
+w = WorkspaceClient()
+
+def create_secret():
+    scope_name= 'q_fed'
+    key_name = 'mysql'
+    w.secrets.create_scope(scope=scope_name)
+    w.secrets.put_secret(scope=scope_name, key=key_name, string_value=spark.conf.get("da.rds_password"))
+    w.secrets.put_acl(scope=scope_name, permission=workspace.AclPermission.MANAGE, principal="account users")
+
+def check_secret():
+    scopes = w.secrets.list_scopes()
+    for scope in scopes:
+        if scope.name == 'q_fed':
+            return
+
+    create_secret() 
+
+
+# COMMAND ----------
+
+check_secret()
+
+# COMMAND ----------
+
+# from databricks.sdk import WorkspaceClient
+# w = WorkspaceClient()
+# scopes = w.secrets.list_scopes()
+# for scope in scopes:
+#     w.secrets.delete_scope('q_fed')
+
+# COMMAND ----------
+
+# w.secrets.delete_scope('q_fed')
+
+# COMMAND ----------
+
+

@@ -5,10 +5,10 @@
 
 create connection rds_mysql type mysql 
 options (
-  host `${da.rds_endpoint}`,
+  host '${da.rds_endpoint}',
   port '3306',
-  user `${da.rds_user}`,
-  password `${da.rds_password}`
+  user 'labuser',
+  password secret('q_fed','mysql')
 );
 
 
@@ -22,5 +22,10 @@ describe connection extended rds_mysql;
 
 -- COMMAND ----------
 
-create foreign catalog mysql_catalog using connection rds_mysql 
+create foreign catalog mysql_external using connection rds_mysql 
 
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ##Now use SQL Warehouse to query##
