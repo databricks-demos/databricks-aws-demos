@@ -1,12 +1,4 @@
 # Databricks notebook source
-pip install databricks-sdk
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
 import boto3
 from botocore.exceptions import ClientError
 import json
