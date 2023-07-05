@@ -1,8 +1,10 @@
 # Databricks notebook source
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 
+
 # COMMAND ----------
 
+#comment
 file_counter = 1
 file_counter_sns = 1
 reset_all_data = dbutils.widgets.get("reset_all_data") == "true"

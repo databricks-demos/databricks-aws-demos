@@ -72,9 +72,15 @@ def get_cfn():
                     cfn_outputs[output_key] = output['OutputValue']
 
             workshop_bucket = cfn_outputs['DatabrickWorkshopBucket']
-            rds_endpoint = cfn_outputs['RDSendpoint']
-            rds_user = 'labuser'
-            rds_password = get_secret(get_region(),cfn_outputs['RDSsecret'])
+            if 'RDSendpoint' in cfn_outputs:
+                rds_endpoint = cfn_outputs['RDSendpoint']
+                rds_user = 'labuser'
+                rds_password = get_secret(get_region(),cfn_outputs['RDSsecret'])
+            else:
+                rds_endpoint = 'None'
+                rds_user = 'None'
+                rds_password = 'None'
+            
             spark.conf.set("da.workshop_bucket",workshop_bucket)
             spark.conf.set("da.rds_endpoint",rds_endpoint)
             spark.conf.set("da.rds_user",rds_user)
@@ -82,15 +88,27 @@ def get_cfn():
 
     print(f"""
     S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
-    RDS End Point:              {cfn_outputs['RDSendpoint']}
-    Secret Manager:             {cfn_outputs['RDSsecret']}
-    RDS User:                   labuser
+    RDS End Point:              {rds_endpoint}
+    RDS User:                   {rds_user}
     RDS Password:               {rds_password}
     """)
 
 # COMMAND ----------
 
 get_cfn()
+
+# COMMAND ----------
+
+import pkg_resources
+import subprocess
+import sys
+
+installed_packages = pkg_resources.working_set
+installed_packages_list = sorted(["%s" % (i.key)
+   for i in installed_packages])
+#print(installed_packages_list)
+if 'databricks-sdk' not in installed_packages_list:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "databricks-sdk"])
 
 # COMMAND ----------
 
@@ -117,19 +135,3 @@ def check_secret():
 # COMMAND ----------
 
 check_secret()
-
-# COMMAND ----------
-
-# from databricks.sdk import WorkspaceClient
-# w = WorkspaceClient()
-# scopes = w.secrets.list_scopes()
-# for scope in scopes:
-#     w.secrets.delete_scope('q_fed')
-
-# COMMAND ----------
-
-# w.secrets.delete_scope('q_fed')
-
-# COMMAND ----------
-
-
