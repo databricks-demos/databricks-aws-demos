@@ -121,7 +121,7 @@ def create_secret():
     key_name = 'mysql'
     w.secrets.create_scope(scope=scope_name)
     w.secrets.put_secret(scope=scope_name, key=key_name, string_value=spark.conf.get("da.rds_password"))
-    w.secrets.put_acl(scope=scope_name, permission=workspace.AclPermission.MANAGE, principal="account users")
+    w.secrets.put_acl(scope=scope_name, permission=workspace.AclPermission.MANAGE, principal="users")
 
 def check_secret():
     scopes = w.secrets.list_scopes()
