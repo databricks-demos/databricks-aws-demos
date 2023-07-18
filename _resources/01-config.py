@@ -57,14 +57,14 @@ import boto3
 def get_cfn():
     client = boto3.client('cloudformation',region_name=get_region())
     response = client.describe_stacks()#StackName=dbutils.widgets.get("stack"))
-    #stack = response['Stacks'][0] 
+    cfn_outputs = {}
     for stack in response['Stacks']:
     #spark.conf.set("da.stack",dbutils.widgets.get("stack"))
         outputs = stack.get('Outputs', [])
         if outputs:
 
             desired_output_keys = ['DatabrickWorkshopBucket', 'RDSendpoint', 'RDSsecret']
-            cfn_outputs = {}
+            
 
             for output in outputs:
                 output_key = output['OutputKey']
@@ -86,12 +86,12 @@ def get_cfn():
             spark.conf.set("da.rds_user",rds_user)
             spark.conf.set("da.rds_password",rds_password)
 
-    print(f"""
-    S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
-    RDS End Point:              {rds_endpoint}
-    RDS User:                   {rds_user}
-    RDS Password:               {rds_password}
-    """)
+            print(f"""
+            S3 Bucket:                  {cfn_outputs['DatabrickWorkshopBucket']}
+            RDS End Point:              {rds_endpoint}
+            RDS User:                   {rds_user}
+            RDS Password:               {rds_password}
+            """)
 
 # COMMAND ----------
 
