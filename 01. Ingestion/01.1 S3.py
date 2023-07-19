@@ -205,6 +205,11 @@ df.createOrReplaceTempView('vw_json_files')
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC SELECT * FROM read_files('${da.cloud_storage_path}/ingest')
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## SQL: Creating a Table from JSON Data
 # MAGIC
